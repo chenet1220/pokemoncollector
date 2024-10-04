@@ -1,6 +1,27 @@
 from django.db import models
 from django.urls import reverse
 
+MEALS = (
+    ("A", "Apple"),
+    ("B", "Berry"),
+    ("G", "Grapes"),
+    ("H", "Hot Dog"),
+    ("P", "Pizza"),
+    ("S", "Sushi"),
+    ("W", "Tonkatsu"),
+)
+
+class Item(models.Model):
+    name = models.CharField(max_length=50)
+    effect = models.CharField(max_length=200)
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('item-detail', kwargs={'pk': self.pk})
+
+
 class Pokemon(models.Model):
     name = models.CharField(max_length=100)
     poke_id = models.IntegerField()
@@ -9,10 +30,21 @@ class Pokemon(models.Model):
     abilities = models.TextField()
     image_url = models.URLField()
     nickname = models.CharField(max_length=100, blank=True, null=True)
+    items = models.ManyToManyField(Item)
 
     def __str__(self):
-       return f'{self.name} (ID: {self.poke_id})'
-
+        return f'{self.name} - {self.id}'
+    
     def get_absolute_url(self):
         return reverse('poke-detail', kwargs={'poke_id': self.poke_id})
 
+class Feeding(models.Model):
+    date = models.DateField('Feeding date')
+    meal = models.CharField(max_length=1, choices=MEALS, default=MEALS[0][0])
+    pokemon = models.ForeignKey(Pokemon, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f'{self.get_meal_display()} on {self.date}'
+    
+    class Meta:
+        ordering = ['-date']
